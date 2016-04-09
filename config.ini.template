@@ -1,8 +1,19 @@
 [globals]
 
+AUTOLOAD=app/
 DEBUG=3
+
+; Where the framework will look for templates and related HTML-support files
 UI=ui/
-MYSQL_HOST=127.0.0.1
+
+; Where errors are logged
+LOGS=tmp/
+
+; Caching on Front End
+CACHE=false
+
+; mySQL Database Configuration
+MYSQL_HOST=
 MYSQL_DATABASE=
 MYSQL_USERNAME=
 MYSQL_PASSWORD=
