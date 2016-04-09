@@ -8,10 +8,21 @@ class Admin extends Controller {
 			} else if ($function == 'logout' ) {
 				// Do nothing
 			} else {
+				$f3->reroute('/admin/login');
 			}
 			
 			// Update session data
 			$f3->set('SESSION.lastseen', time());
+		}
+	}
+	
+	function exec($f3, $args) {
+		$function = $args['function'];
+		
+		if ( method_exists($this, $function) ) {
+			call_user_func_array(array($this, $function), array($f3));
+		} else {
+			$f3->error(404);
 		}
 	}
 	
