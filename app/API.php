@@ -80,7 +80,7 @@ class API extends Controller {
 						$access->save();
 
 						$this->result['status'] = 200;
-						$this->result['message'] = 'Verified';
+						$this->result['message'] = 'Success';
 						$this->result['access_token'] = $access_token;
 					} else {
 						$this->result['status'] = 500;
@@ -105,9 +105,7 @@ class API extends Controller {
 	}
 	
 	function AccessRoom($f3) {
-	}
-	
-	
+	}	
 }
 
 ?>

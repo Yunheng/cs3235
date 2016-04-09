@@ -7,6 +7,8 @@ class Controller {
 	}
 
 	function afterroute() {
+		// Render HTML layout
+		echo Template::instance()->render('layout.html');
 	}
 
 	function __construct() {
@@ -17,11 +19,6 @@ class Controller {
 			$f3->get('MYSQL_PASSWORD')
 		);
 		
-		if (file_exists('setup.sql')) {
-			$db->exec(explode(';', $f3->read('setup.sql')));
-			rename('setup.sql', 'setup.$ql');
-		}
-
 		new DB\SQL\Session($db);
 		$this->db = $db;
 	}
