@@ -100,7 +100,7 @@ class API extends Controller {
 							$this->result['status'] = 200;
 							$this->result['message'] = 'Success';
 							$this->result['access_token'] = $access_token;
-							$this->result['secret_key'] = bin2hex($secretkey);
+							$this->result['secret_key'] = base64_encode($secretkey);
 						} catch (TypeError $e) {
 						    // Well, it's an integer, so this IS unexpected.
 						    die("An unexpected error has occurred");
