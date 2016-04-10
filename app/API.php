@@ -23,7 +23,7 @@ class API extends Controller {
 
 	function EnrolUser($f3) {
 		$userId = $f3->get('POST.userid');
-		$current_time = time();
+		$current_time = new DateTime();
 
 		$user = new \DB\SQL\Mapper($this->db, 'users');
 		$user->load(array('id=?', $userId));
@@ -39,20 +39,21 @@ class API extends Controller {
 			$token->userId = $user->id;
 			$token->token = $otp;
 			$token->status = 1;
-			$token->issued = $current_time;
-			$token->expiry = $current_time + 300;
+			$token->issued = $current_time->format("Y-m-d H:i:s");
+			$token->expiry = $current_time->add(new DateInterval("PT5M"))->format("Y-m-d H:i:s");
 			$token->save();
 
 			$this->result['status'] = 200;
 			$this->result['message'] = 'Token Issued';
 			$this->result['token'] = $otp;
+			$this->result['expiry'] = $token->expiry;
 		}
 	}
 
 	function EnrolVerify($f3) {
 		$userId = $f3->get('POST.userid');
 		$otp = $f3->get('POST.otp');
-		$current_time = time();
+		$current_time = new DateTime();
 
 		$user = new \DB\SQL\Mapper($this->db, 'users');
 		$user->load(array('id=?', $userId));
@@ -65,7 +66,8 @@ class API extends Controller {
 			$token->load(array('userId=?', $user->id));
 
 			if ( $token->status == 1 ) {
-				if ( $current_time <= $token->expiry ) {
+				$expiry = new DateTime($token->expiry);
+				if ( $current_time <= $expiry ) {
 					if ( $token->token == $otp ) {
 						$token->status = 0;
 						$token->save();
@@ -75,8 +77,8 @@ class API extends Controller {
 						$access = new \DB\SQL\Mapper($this->db, 'access_tokens');
 						$access->userId = $user->id;
 						$access->token = $access_token;
-						$access->issued = $current_time;
-						$access->expiry = $current_time + 3600;
+						$access->issued = $current_time->format("Y-m-d H:i:s");
+						$access->expiry = $current_time->add(new DateInterval("PT1H"))->format("Y-m-d H:i:s");
 						$access->save();
 
 						$this->result['status'] = 200;
