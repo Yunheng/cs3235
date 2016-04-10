@@ -33,6 +33,15 @@ class Admin extends Controller {
 	}
 
 	function main($f3) {
+		$f3->set('inc','main.html');
+	}
+
+	function users($f3) {
+		$f3->set('inc','users.html');
+	}
+
+	function locks($f3) {
+		$f3->set('inc','locks.html');
 	}
 
 	function setup($f3) {
