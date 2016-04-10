@@ -1,12 +1,12 @@
 <div class="main">
-	<form method="post" action="{{ @BASE }}/login" class="login">
+	<form method="post" action="{{ @BASE }}/admin/login" class="login">
 		<h5>Login</h5>
 		<check if="{{ isset(@message) }}">
-		<p class="message">{{ @message }}</p>
+			<p class="message">{{ @message }}</p>
 		</check>
 		<p>
 			<label for="user_id"><small>User ID</small></label><br />
-			<input id="user_id" name="user_id" type="text" {{ isset(@POST.user_id)?('value="'.@POST.user_id.'"'):'' }} />
+			<input id="user_id" name="username" type="text" {{ isset(@POST.username)?('value="'.@POST.username.'"'):'' }} />
 		</p>
 		<p>
 			<label for="password"><small>Password</small></label><br />
