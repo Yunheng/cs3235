@@ -46,7 +46,7 @@ class API extends Controller {
 			$token->save();
 
 			// Send email
-			$smtp = new \SMTP($f3->get('SMTP_SERVER'), $f3->get('SMTP_PORT'), 'tls', $f3->get('SMTP_USERNAME'), $f3->get('SMTP_PASSWORD'));
+			$smtp = new \SMTP($f3->get('SMTP_SERVER'), $f3->get('SMTP_PORT'), '', $f3->get('SMTP_USERNAME'), $f3->get('SMTP_PASSWORD'));
 			$smtp->set('From', '"securelock@vfix.net" <securelock@vfix.net>');
 			$smtp->set('To', '"' . $user->email . '" <' . $user->email . '>');
 			$smtp->set('Subject', 'One-Time Password for SecureLock');
