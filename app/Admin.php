@@ -2,21 +2,6 @@
 
 class Admin extends Controller {
 	function beforeroute($f3) {
-		$function = strtolower($f3->get('PARAMS.function'));
-		if (empty($function)) {
-			$function = "main";
-		}
-		if ( method_exists($this, $function) ) {
-			if ($function == 'login') {
-			} else if ($function == 'logout' ) {
-				// Do nothing
-			} else {
-				$f3->reroute('/admin/login');
-			}
-
-			// Update session data
-			$f3->set('SESSION.lastseen', time());
-		}
 	}
 
 	function exec($f3, $args) {
@@ -26,10 +11,29 @@ class Admin extends Controller {
 		}
 
 		if ( method_exists($this, $function) ) {
-			call_user_func_array(array($this, $function), array($f3));
+			if ( $function == "login" || $function == "logout" ) {
+				call_user_func_array(array($this, $function), array($f3));
+			} else {
+				if ( $this->is_logged_in($f3) && !($function == "login" || $function == "logout")) {
+					// Update session data
+					$f3->set('SESSION.lastseen', time());
+					call_user_func_array(array($this, $function), array($f3));
+				} else {
+					$f3->reroute('admin/login');
+				}
+			}
 		} else {
 			$f3->error(404);
 		}
+	}
+
+	function is_logged_in($f3) {
+		$current_time = time();
+		if ( $f3->get('SESSION.username') == $f3->get('ADMIN_USERNAME') && $f3->get('SESSION.password') == $f3->get('ADMIN_PASSWORD') && $f3->get('SESSION.lastseen')+3600 > $current_time ) {
+			return true;
+		}
+
+		return false;
 	}
 
 	function main($f3) {
@@ -37,6 +41,7 @@ class Admin extends Controller {
 	}
 
 	function users($f3) {
+		$f3->set('users', $this->db->exec('SELECT * FROM users'));
 		$f3->set('inc','users.html');
 	}
 
@@ -67,7 +72,7 @@ class Admin extends Controller {
 					$f3->clear('COOKIE.sent');
 					$f3->clear('SESSION.captcha');
 					$f3->set('SESSION.username', $f3->get('ADMIN_USERNAME'));
-					$f3->set('SESSION.crypt', $f3->get('ADMIN_PASSWORD'));
+					$f3->set('SESSION.password', $f3->get('ADMIN_PASSWORD'));
 					$f3->set('SESSION.lastseen', time());
 					$f3->reroute('/admin');
 				}

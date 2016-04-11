@@ -1,0 +1,21 @@
+<div class="main">
+	<h3>User Management</h3>
+	<div class="contents">
+		<table>
+			<tr>
+				<th>User ID</th>
+				<th>Email</th>
+				<th>Registered Date</th>
+				<th>&nbsp;</th>
+			</tr>
+			<repeat group="{{ @users }}" value="{{ @user }}">
+				<tr>
+					<td>{{@user.id}}</td>
+					<td>{{@user.email}}</td>
+					<td>{{@user.registered}}</td>
+					<td><a href="#">Manage Access Matrix</a><br><a href="#">Delete User</a></td>
+				</tr>
+			</repeat>
+		</table>
+	</div>
+</div>
