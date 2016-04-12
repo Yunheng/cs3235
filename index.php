@@ -16,5 +16,8 @@ $f3->route('GET /', function($f3) {
 $f3->route('GET /admin', 'Admin->exec');
 $f3->route('GET|POST /admin/@function', 'Admin->exec', 0);
 $f3->route('GET|POST /api/@function', 'API->exec', 0);
+$f3->route('GET /info', function($f3) {
+	phpinfo();
+});
 
 $f3->run();

@@ -37,6 +37,7 @@ CREATE TABLE `users` (
   `id` varchar(64) NOT NULL,
   `email` varchar(256) NOT NULL,
   `status` tinyint(1) NOT NULL,
+  `otpsecret` varchar(256) NULL,
   `registered` TIMESTAMP NOT NULL,
   `last_update` TIMESTAMP NOT NULL,
   PRIMARY KEY (`id`)

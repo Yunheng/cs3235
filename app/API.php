@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . "/lib/random.php";
+require_once __DIR__ . "/lib/base32.php";
 
 class API extends Controller {
 	private $result;
@@ -85,9 +86,15 @@ class API extends Controller {
 					if ( $token->token == $otp ) {
 						try {
 							$secretkey = random_bytes(32);
+							$otpsecret = random_bytes(128);
+							$encoded_otpsecret = Base32\Base32::encode($otpsecret);
+
 							$access_token = $this->GUID();
 							$token->status = 0;
 							$token->save();
+
+							$user->otpsecret = $encoded_otpsecret;
+							$user->save();
 
 							$access = new \DB\SQL\Mapper($this->db, 'access_tokens');
 							$access->userId = $user->id;
@@ -101,6 +108,7 @@ class API extends Controller {
 							$this->result['message'] = 'Success';
 							$this->result['access_token'] = $access_token;
 							$this->result['secret_key'] = base64_encode($secretkey);
+							$this->result['otp_key'] = $encoded_otpsecret;
 						} catch (TypeError $e) {
 						    // Well, it's an integer, so this IS unexpected.
 						    die("An unexpected error has occurred");
@@ -123,6 +131,30 @@ class API extends Controller {
 				$this->result['status'] = 500;
 				$this->result['message'] = 'Token Already Verified';
 			}
+		}
+	}
+
+	function OTPVerify($f3) {
+		$userId = $f3->get('POST.userid');
+		$otp = $f3->get('POST.otp');
+
+		$user = new \DB\SQL\Mapper($this->db, 'users');
+		$user->load(array('id=?', $userId));
+
+		$totp = new \OTPHP\TOTP(
+		    $userId, 			// Label
+		    $user->otpsecret,	// The secret
+		    30,                 // The period (default value is 30)
+		    'sha256',           // The digest algorithm (default value is 'sha1')
+		    10                  // The number of digits (default value is 6)
+		);
+
+		if ( $totp->verify($otp) ) {
+			$this->result['status'] = 200;
+			$this->result['message'] = 'OTP is valid';
+		} else {
+			$this->result['status'] = 500;
+			$this->result['message'] = 'OTP is invalid';
 		}
 	}
 
