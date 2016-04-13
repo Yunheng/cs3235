@@ -1,7 +1,6 @@
 <?php
 
 require_once __DIR__ . "/lib/random.php";
-require_once __DIR__ . "/lib/base32.php";
 
 class API extends Controller {
 	private $result;
@@ -91,18 +90,20 @@ class API extends Controller {
 
 							$access_token = $this->GUID();
 							$token->status = 0;
-							$token->save();
 
 							$user->otpsecret = $encoded_otpsecret;
-							$user->save();
 
 							$access = new \DB\SQL\Mapper($this->db, 'access_tokens');
+							$access->load(array('userId=?', $user->id));
 							$access->userId = $user->id;
 							$access->token = $access_token;
 							$access->secretkey = $secretkey;
 							$access->issued = $current_time->format("Y-m-d H:i:s");
 							$access->expiry = $current_time->add(new DateInterval("PT1H"))->format("Y-m-d H:i:s");
+
 							$access->save();
+							$token->save();
+							$user->save();
 
 							$this->result['status'] = 200;
 							$this->result['message'] = 'Success';
@@ -164,19 +165,45 @@ class API extends Controller {
 	}
 
 	function AccessRoom($f3) {
-		$deviceId = $f3->get('POST.deviceid');
+		$userId = $f3->get('POST.userid');
 		$lockId = $f3->get('POST.lockid');
+		$msg = trim($f3->get('POST.msg'));
 		$current_time = new DateTime();
 
 		$token = new \DB\SQL\Mapper($this->db, 'access_tokens');
-		$token->load(array('token=?', $deviceId));
+		$token->load(array('userId=?', $userId));
 		if ( $token->dry() || $token->expiry > $current_time ) {
 			$this->result['status'] = 500;
 			$this->result['message'] = 'Invalid Token';
 		} else {
 			// TODO: Check Access Matrix
-			$this->result['status'] = 200;
-			$this->result['message'] = 'Success';
+
+			$user = new \DB\SQL\Mapper($this->db, 'users');
+			$user->load(array('id=?', $token->userId));
+			$totp = new \OTPHP\TOTP(
+			    $userId, 			// Label
+			    $user->otpsecret,	// The secret
+			    30,                 // The period (default value is 30)
+			    'sha1',           // The digest algorithm (default value is 'sha1')
+			    6                  // The number of digits (default value is 6)
+			);
+
+			$curotp = $totp->now();
+		 	$hash = hash("sha256", $token->token . $curotp);
+
+			if ( $hash == $msg ) {
+				$this->result['status'] = 200;
+				$this->result['message'] = 'Success';
+			} else {
+				$this->result['status'] = 500;
+				$this->result['message'] = 'OTP or Token is invalid';
+				$this->result['expected'] = $hash;
+				$this->result['otp'] = $curotp;
+				$this->result['deviceid'] = $token->token;
+				$this->result['msg'] = $msg;
+				$this->result['userid'] = $userId;
+				$this->result['lockid'] = $lockId;
+			}
 		}
 	}
 
