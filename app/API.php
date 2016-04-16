@@ -197,12 +197,6 @@ class API extends Controller {
 			} else {
 				$this->result['status'] = 500;
 				$this->result['message'] = 'OTP or Token is invalid';
-				$this->result['expected'] = $hash;
-				$this->result['otp'] = $curotp;
-				$this->result['deviceid'] = $token->token;
-				$this->result['msg'] = $msg;
-				$this->result['userid'] = $userId;
-				$this->result['lockid'] = $lockId;
 			}
 		}
 	}
