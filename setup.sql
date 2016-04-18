@@ -32,6 +32,14 @@ CREATE TABLE `locks` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+DROP TABLE IF EXISTS `logs`;
+CREATE TABLE `logs` (
+  `id` int(11) NOT NULL,
+  `time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `userId` varchar(64) DEFAULT NULL,
+  `message` text NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users` (
   `id` varchar(64) NOT NULL,
@@ -52,3 +60,8 @@ ALTER TABLE `otp_tokens`
 
 ALTER TABLE `access_tokens`
   ADD CONSTRAINT `access_tokens_ibfk_1` FOREIGN KEY (`userId`) REFERENCES `users` (`id`);
+
+ALTER TABLE `logs`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `userId` (`userId`),
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
