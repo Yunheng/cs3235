@@ -37,6 +37,7 @@ CREATE TABLE `logs` (
   `id` int(11) NOT NULL,
   `time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `userId` varchar(64) DEFAULT NULL,
+  `ipAddress` varchar(16) DEFAULT NULL,
   `message` text NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 

@@ -30,9 +30,19 @@ class API extends Controller {
 		$user = new \DB\SQL\Mapper($this->db, 'users');
 		$user->load(array('id=?', $userId));
 
+		$log = new \DB\SQL\Mapper($this->db, 'logs');
+
 		if ( $user->dry() ) {
+			$message = '[UserID: ' . $userId . '] Invalid Login Attempt';
+
+			$log->time = $current_time->format("Y-m-d H:i:s");
+			$log->ipAddress = $f3->get('IP');
+			$log->message = $message;
+			$log->save();
+
+			$log->message = "Lo"
 			$this->result['status'] = 500;
-			$this->result['message'] = 'Invalid User "' . $userId . '"';
+			$this->result['message'] = $message;
 		} else {
 			$token = new \DB\SQL\Mapper($this->db, 'otp_tokens');
 			$token->load(array('userId=?', $user->id));
@@ -53,9 +63,18 @@ class API extends Controller {
 			if ( $smtp->send($otp) ) {
 				$this->result['status'] = 200;
 				$this->result['message'] = 'Token Issued';
-				$this->result['token'] = $otp;
 				$this->result['expiry'] = $token->expiry;
+
+				$log->time = $current_time->format("Y-m-d H:i:s");
+				$log->ipAddress = $f3->get('IP');
+				$log->message = '[UserID: ' . $userId . '] Token Issued and Expires ' . $token->expiry;
+				$log->save();
 			} else {
+				$log->time = $current_time->format("Y-m-d H:i:s");
+				$log->ipAddress = $f3->get('IP');
+				$log->message = '[UserID: ' . $userId . '] Token Failed to Issue';
+				$log->save();
+
 				$this->result['status'] = 500;
 				$this->result['message'] = 'Token Failed';
 				$token->erase();
@@ -170,9 +189,16 @@ class API extends Controller {
 		$msg = trim($f3->get('POST.msg'));
 		$current_time = new DateTime();
 
+		$log = new \DB\SQL\Mapper($this->db, 'logs');
+
 		$token = new \DB\SQL\Mapper($this->db, 'access_tokens');
 		$token->load(array('userId=?', $userId));
 		if ( $token->dry() || $token->expiry > $current_time ) {
+			$log->time = $current_time->format("Y-m-d H:i:s");
+			$log->ipAddress = $f3->get('IP');
+			$log->message = '[UserID: ' . $userId . '] Failed Access to Room ' . $lockId;
+			$log->save();
+
 			$this->result['status'] = 500;
 			$this->result['message'] = 'Invalid Token';
 		} else {
@@ -192,9 +218,19 @@ class API extends Controller {
 		 	$hash = hash("sha256", $token->token . $curotp);
 
 			if ( $hash == $msg ) {
+				$log->time = $current_time->format("Y-m-d H:i:s");
+				$log->ipAddress = $f3->get('IP');
+				$log->message = '[UserID: ' . $userId . '] Granted Access to Room ' . $lockId;
+				$log->save();
+
 				$this->result['status'] = 200;
 				$this->result['message'] = 'Success';
 			} else {
+				$log->time = $current_time->format("Y-m-d H:i:s");
+				$log->ipAddress = $f3->get('IP');
+				$log->message = '[UserID: ' . $userId . '] Failed Access to Room ' . $lockId;
+				$log->save();
+
 				$this->result['status'] = 500;
 				$this->result['message'] = 'OTP or Token is invalid';
 			}
