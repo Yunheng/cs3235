@@ -2,6 +2,7 @@ DROP TABLE IF EXISTS `access`;
 CREATE TABLE `access` (
   `userId` varchar(64) NOT NULL,
   `lockId` varchar(16) NOT NULL,
+  'access' tinyint(1) DEFAULT '0',
   PRIMARY KEY (`userId`,`lockId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
