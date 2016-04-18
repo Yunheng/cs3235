@@ -33,16 +33,14 @@ class API extends Controller {
 		$log = new \DB\SQL\Mapper($this->db, 'logs');
 
 		if ( $user->dry() ) {
-			$message = '[UserID: ' . $userId . '] Invalid Login Attempt';
-
 			$log->time = $current_time->format("Y-m-d H:i:s");
 			$log->ipAddress = $f3->get('IP');
-			$log->message = $message;
+			$log->message = '[UserID: ' . $userId . '] Invalid Login Attempt';
 			$log->save();
 
-			$log->message = "Lo"
+
 			$this->result['status'] = 500;
-			$this->result['message'] = $message;
+			$this->result['message'] = 'Invalid Login';
 		} else {
 			$token = new \DB\SQL\Mapper($this->db, 'otp_tokens');
 			$token->load(array('userId=?', $user->id));
