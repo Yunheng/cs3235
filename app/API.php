@@ -179,6 +179,55 @@ class API extends Controller {
 	function ExpelUser($f3) {
 		$userId = $f3->get('POST.userid');
 		$deviceId = $f3->get('POST.deviceid');
+		$msg = trim($f3->get('POST.msg'));
+		$current_time = new DateTime();
+
+		$log = new \DB\SQL\Mapper($this->db, 'logs');
+
+		$token = new \DB\SQL\Mapper($this->db, 'access_tokens');
+		$token->load(array('userId=?', $userId));
+		if ( $token->dry() || $token->expiry > $current_time ) {
+			$log->time = $current_time->format("Y-m-d H:i:s");
+			$log->ipAddress = $f3->get('IP');
+			$log->message = '[UserID: ' . $userId . '] Failed to Reokve Device ' . $deviceId;
+			$log->save();
+
+			$this->result['status'] = 500;
+			$this->result['message'] = 'Invalid Token';
+		} else {
+			// Check TOTP Accuracy
+			$user = new \DB\SQL\Mapper($this->db, 'users');
+			$user->load(array('id=?', $token->userId));
+			$totp = new \OTPHP\TOTP(
+			    $userId, 			// Label
+			    $user->otpsecret,	// The secret
+			    30,                 // The period (default value is 30)
+			    'sha1',           // The digest algorithm (default value is 'sha1')
+			    6                  // The number of digits (default value is 6)
+			);
+
+			$curotp = $totp->now();
+		 	$hash = hash("sha256", $token->token . $curotp);
+
+			if ( $hash == $msg ) {
+				$log->time = $current_time->format("Y-m-d H:i:s");
+				$log->ipAddress = $f3->get('IP');
+				$log->message = '[UserID: ' . $userId . '] Device Revoked ' . $token->token;
+				$log->save();
+
+				$token->erase();
+				$this->result['status'] = 200;
+				$this->result['message'] = 'Success';
+			} else {
+				$log->time = $current_time->format("Y-m-d H:i:s");
+				$log->ipAddress = $f3->get('IP');
+				$log->message = '[UserID: ' . $userId . '] Failed to Revoke Device ' . $token->token;
+				$log->save();
+
+				$this->result['status'] = 500;
+				$this->result['message'] = 'OTP or Token is invalid';
+			}
+		}
 	}
 
 	function AccessRoom($f3) {
@@ -202,7 +251,7 @@ class API extends Controller {
 		} else {
 			// Check Access Matrix
 			$access = new \DB\SQL\Mapper($this->db, 'access');
-			$access->load(array('userId=?,lockId=?', $userId, $lockId));
+			$access->load(array('userId=? and lockId=?', $userId, $lockId));
 			if ( $access->dry() || $access->access == 0 ) {
 				$log->time = $current_time->format("Y-m-d H:i:s");
 				$log->ipAddress = $f3->get('IP');
@@ -244,8 +293,6 @@ class API extends Controller {
 					$this->result['message'] = 'OTP or Token is invalid';
 				}
 			}
-
-
 		}
 	}
 
